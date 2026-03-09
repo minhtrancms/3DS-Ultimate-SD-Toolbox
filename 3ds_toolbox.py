@@ -141,8 +141,23 @@ class SDToolBox(QMainWindow):
         btn_copy_game.clicked.connect(self.select_and_copy_games)
         row2.addWidget(btn_copy_game)
 
+        btn_twilight = QPushButton(" Cài Giả lập NDS (TWiLight Menu++)")
+        btn_twilight.setMinimumHeight(35)
+        btn_twilight.clicked.connect(lambda: self.run_task(self.install_twilight))
+        row2.addWidget(btn_twilight)
+
+        row3 = QHBoxLayout()
+        row3.setSpacing(10)
+        
+        btn_format = QPushButton(" Ép Format FAT32 (Tự Động)")
+        btn_format.setMinimumHeight(35)
+        btn_format.setStyleSheet("background-color: #FF5722; color: white; font-weight: bold;")
+        btn_format.clicked.connect(self.prompt_format_fat32)
+        row3.addWidget(btn_format)
+
         action_layout.addLayout(row1)
         action_layout.addLayout(row2)
+        action_layout.addLayout(row3)
         action_group.setLayout(action_layout)
         main_layout.addWidget(action_group)
 
@@ -491,7 +506,12 @@ class SDToolBox(QMainWindow):
         self.thread_log(" 2. Nhấn & GIỮ NÚT `START`, bóp Nút Nguồn để bật máy.")
         self.thread_log(" 3. Chọn `x_finalize_helper` trong Menu hiện ra.")
         self.thread_log(" 4. Máy sẽ tự động vào Finalize: Nhấn `A` và nhập Combo phím để nó TỰ ĐỘNG cài tất cả FBI, hShop, Universal Updater... ra màn hình chính, tự động dọn rác System.")
-        self.thread_log(" Chúc bạn chơi game vui vẻ!!")
+        self.thread_log("\n QUAN TRỌNG NHẤT (CHỐNG BRICK MÁY):")
+        self.thread_log(" Sau khi làm xong mọi thứ lên màn hình chính. Bạn TẮT NGUỒN lại.")
+        self.thread_log(" Nhấn GIỮ NÚT `START`, bóp Nguồn chọn `GodMode9`.")
+        self.thread_log(" Nhấn BẤM PHÍM `HOME` -> `Scripts` -> `GM9Megascript` -> `Scripts from Plailect's Guide` -> `Setup Luma3DS to CTRNAND`.")
+        self.thread_log(" Thoát ra bấm `HOME` -> `Scripts` -> `GM9Megascript` -> `Backup Options` -> `SysNAND Backup`.")
+        self.thread_log(" Chúc bạn phưu lưu bất tận an toàn với chiếc Thẻ Thần Thánh này nhé!!")
 
     def copy_minh_store(self, sd):
         self.thread_log("\n--- COPY MINH GAME STORE ---")
@@ -535,7 +555,8 @@ class SDToolBox(QMainWindow):
         total_files = len(file_paths)
         for i, source in enumerate(file_paths, 1):
             filename = os.path.basename(source)
-            self.thread_log(f"Đang chép [{i}/{total_files}]: {filename}...")
+            size_mb = os.path.getsize(source) / (1024**2)
+            self.thread_log(f"Đang chép [{i}/{total_files}]: {filename} (Dung lượng: {size_mb:.1f} MB)...")
             dest = os.path.join(cias_dir, filename)
             try:
                 # Basic copy without progress bar, could take time depending on file size
@@ -545,6 +566,99 @@ class SDToolBox(QMainWindow):
                 self.thread_log(f" Lỗi copy {filename}: {e}")
                 
         self.thread_log("\n HOÀN TẤT CHÉP GAME! BẠN CÓ THỂ RÚT THẺ VÀ CÀI QUA FBI/FBI CUSTOM TRÊN 3DS.")
+
+    def prompt_format_fat32(self):
+        sd = self.get_selected_sd()
+        if not sd: return
+        
+        reply = QMessageBox.warning(
+            self, 
+            "⚠️ NGHIỀN NÁT & ÉP FORMAT FAT32", 
+            f"Bạn có chắc chắn muốn TỰ ĐỘNG CÀY MẶT & ĐỊNH DẠNG LẠI THẺ {sd} thành FAT32 không?\n"
+            "TOÀN BỘ DỮ LIỆU SẼ BAY MÀU VĨNH VIỄN!\n",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+        if reply == QMessageBox.StandardButton.Yes:
+            self.run_task(self.auto_format_fat32_task)
+
+    def auto_format_fat32_task(self, sd):
+        self.thread_log("\n--- BẮT ĐẦU ÉP FORMAT THẺ THÀNH ĐỊNH DẠNG FAT32 CHUẨN ---")
+        try:
+            if platform.system() == "Windows":
+                self.thread_log(" Đang chạy lệnh Format FAT32 của Windows...")
+                self.thread_log(" Cảnh báo: Nếu thẻ lớn hơn 32GB, lệnh này của Windows sẽ tự động báo lỗi. Khi đó bạn bắt buộc dùng App GUIFormat để ép Format bằng tay!")
+                drive_letter = sd[:2]
+                res = subprocess.run(["format", drive_letter, "/FS:FAT32", "/V:3DS_SD", "/Q", "/Y"], capture_output=True, text=True)
+                if res.returncode == 0:
+                    self.thread_log(" Đã Ép Format FAT32 thành công rực rỡ! Bắt đầu chép Luma thôi.")
+                    time.sleep(1)
+                    self.worker.refresh_sd_signal.emit()
+                else:
+                    self.thread_log(f" Lỗi Hệ điều hành Windows: Phần vùng quá lớn hoặc chưa được Mount quyền. ({res.stderr})")
+                    self.thread_log(" Vui lòng sử dụng công cụ GUIFormat (Tạo bởi Ridgecrop) để xử lý thay thế!")
+            else:
+                self.thread_log(" Đang đọc Device Node từ hệ thống macOS...")
+                info_res = subprocess.run(["diskutil", "info", sd], check=True, capture_output=True, text=True)
+                dev_node = None
+                for line in info_res.stdout.split('\n'):
+                    if 'Device Node:' in line:
+                        dev_node = line.split('Device Node:')[1].strip()
+                        break
+                
+                if dev_node:
+                    self.thread_log(f" Tìm thấy phân vùng ổ đĩa: {dev_node}. Bắt đầu nghiền nát...")
+                    fmt_res = subprocess.run(["diskutil", "eraseVolume", "FAT32", "3DS_SD", dev_node], check=True, capture_output=True, text=True)
+                    self.thread_log(" Đã Ép Format FAT32 bằng lệnh Apple thành công rực rỡ! Bắt đầu chép Luma thôi.")
+                    time.sleep(1)
+                    self.worker.refresh_sd_signal.emit()
+                else:
+                    self.thread_log(" Không thể tìm ra thiết bị đích (Device Node) từ macOS. Lỗi bất ngờ!")
+        except Exception as e:
+            self.thread_log(f" Lỗi Quá Trình Format FAT32: {e}")
+
+    def install_twilight(self, sd):
+        self.thread_log("\n--- BẮT ĐẦU CÀI ĐẶT TWiLIGHT MENU++ (GIẢ LẬP NDS) ---")
+        self.thread_log("Đang dò tìm phiên bản TWiLight Menu++ mới nhất...")
+        
+        url = "https://api.github.com/repos/DS-Homebrew/TWiLightMenu/releases/latest"
+        download_url = None
+        try:
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req) as res:
+                data = __import__('json').loads(res.read().decode())
+                for asset in data.get('assets', []):
+                    if asset['name'] == 'TWiLightMenu-3DS.7z':
+                        download_url = asset['browser_download_url']
+                        break
+        except Exception as e:
+            self.thread_log(f" Lỗi Github API: {e}")
+            return
+            
+        if not download_url:
+            self.thread_log(" Không tìm thấy file cài đặt TWiLight Menu 3DS.")
+            return
+
+        tmp_7z = os.path.join(sd, "twilight_tmp.7z")
+        self.thread_log("Đang tải TWiLightMenu-3DS.7z (Cần một chút thời gian)...")
+        if self.download_file(download_url, tmp_7z):
+            self.thread_log(" Đã tải xong! Đang giải nén file .7z (Sẽ mất vài phút, vui lòng KHÔNG tắt App!)...")
+            try:
+                import py7zr
+                with py7zr.SevenZipFile(tmp_7z, mode='r') as z:
+                    z.extractall(path=sd)
+                os.remove(tmp_7z)
+                self.thread_log(" Đã cài đặt thành công Giả lập NDS (TWiLight Menu++)!")
+                
+                # Create rom folders
+                for console in ["nds", "gba", "snes", "gbc"]:
+                    os.makedirs(os.path.join(sd, "roms", console), exist_ok=True)
+                self.thread_log(" Đã tạo sẵn các thư mục chứa game ở: /roms/nds/, /roms/gba/ ...")
+                self.thread_log(" HƯỚNG DẪN CUỐI CÙNG: \n 1. Rút thẻ ra, chép game NDS (.nds) vào thư mục /roms/nds/\n 2. Game Gameboy (.gba) chép vào /roms/gba/\n 3. Cắm thẻ vào chơi trực tiếp thông qua TWiLight Menu++ !!")
+            except Exception as e:
+                self.thread_log(f" Lỗi giải nén .7z: {e}")
+        else:
+            self.thread_log(" Lỗi không thể tải được TWiLight Menu!")
 
 
 
