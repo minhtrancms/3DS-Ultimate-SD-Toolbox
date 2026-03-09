@@ -1,30 +1,31 @@
 # 🚀 3DS Ultimate SD Toolbox (macOS & Windows)
 
-Bạn đau đầu với việc phải tải quá nhiều file rườm rà mỗi lần muốn Format và Reset hoặc mới mua máy Nintendo 3DS? 
-Không biết cách khắc phục các lỗi màn hình đen thui sau khi Format máy?
-Toolbox này được sinh ra để biến việc đó trở thành quy trình "1-Click To Win" siêu việt! 
+Are you tired of manually downloading multiple files, creating folders, and fixing black screens after formatting or buying a new Nintendo 3DS?
+This Toolbox is designed to turn the tedious 3DS CFW (Custom Firmware) setup process into a seamless "1-Click To Win" experience!
 
-## 🔥 Tính năng nổi bật ("Killer Features")
-- 🔎 **Cross-Platform Auto Detect**: Hỗ trợ quét thẻ SD tự động cho cả hệ điều hành Windows lẫn macOS (hoạt động đa nền tảng). Nhận diện dung lượng chi tiết.
-- 💡 **Format Format FAT32 Checker**: Chống "mù" thẻ, công cụ tự báo lỗi ngăn chặn Format sai dịnh dạng (exFAT/NTFS) đảm bảo 3DS đọc được.
-- 🔓 **Luma3DS Auto Installer**: Tự kết nối qua Github API, móc phiên bản Luma3DS v13+ mới nhất xả thẳng vào thẻ.
-- 📁 **Cấu trúc Thư mục chuẩn**: Tự động xây dựng rễ `3ds/`, `cias/`, `luma/payloads`, ... theo chuẩn quốc tế.
-- 📦 **Tải Apps Cứu Hộ Thiết Yếu**: Tự động tải tất cả công cụ không thể sống thiếu gồm: `FBI`, `hShop (Universal-Updater)`, `Anemone3DS`, `Checkpoint`, `FTPD`, và siêu ứng dụng cứu game ảo `Faketik`.
-- ⚙️ **Finalize Setup Ready**: Tích hợp sẵn Script cài đặt TỰ ĐỘNG, thả thẻ nhớ vào máy 3DS bấm phím tắt là tự tuôn ra toàn bộ game và ứng dụng ở màn hình chính!
-- 🕹️ **Kéo thả / Copy Game 3DS hàng loạt**: Tha hồ chọn nhiều rổ game `.cia` hoặc `.3ds` quăng thẳng vào thẻ từ Tool.
-- ✏️ **Quản lý Thẻ An toàn**: Tool đổi tên (Rename) định dạng FAT32 chuẩn, Eject thoát thẻ chuẩn để khỏi hỏng dữ liệu.
+## 🔥 Killer Features
+- 🔎 **Cross-Platform Auto Detect**: Automatically scans for removable SD cards on both Windows and macOS. Displays volume paths and accurate storage capacity (Total & Free space).
+- 💡 **FAT32 Format Checker**: Prevents the dreaded "blind" SD error by strictly checking if the SD card is formatted to FAT32 (32KB cluster). Displays a warning for exFAT/NTFS drives that the 3DS cannot read.
+- 🔓 **Luma3DS Auto Installer**: Connects to the GitHub API to fetch and extract the latest Luma3DS v13+ directly to the root of your SD card. No more 404 broken links or outdated files.
+- 📁 **Standard Directory Structure**: Automatically generates the essential folder tree (`3ds/`, `cias/`, `luma/payloads`, `Nintendo 3DS/`, etc.).
+- 📦 **Essential Homebrew Downloader**: Automatically downloads the must-have toolkit: `FBI`, `Universal-Updater` (hShop), `Anemone3DS`, `Checkpoint`, `FTPD`, and the lifesaver app `Faketik`.
+- ⚙️ **Finalize Setup Ready**: Fully integrates the automated Finalize Setup Script. Just insert the SD card into your 3DS, hold `START` on boot, and watch it automatically install all apps to your Home Menu and clean system junk!
+- 🕹️ **Bulk Copy 3DS Games**: Select multiple `.cia` or `.3ds` game files directly from the UI and copy them straight into the `cias/` folder of your SD card.
+- ✏️ **Safe SD Management**: Built-in FAT32-compliant name changer (Rename) and safe Eject mechanism to prevent data corruption.
 
-## 💻 Cách cài đặt & Chạy Tool
+## 💻 Installation & Usage
 
-Bản CLI (Cửa sổ dòng lệnh Terminal) thì không cần cài thêm thư viện nào, hoàn toàn xài module hệ thống thuần Python 3:
+### CLI Version (Command-Line Interface)
+The CLI version uses pure standard Python 3 libraries and requires no additional dependencies:
 ```bash
 python3 3ds_toolbox_cli.py
 ```
 
-Bản GUI (Giao diện Cửa sổ) yêu cầu cài thẻ thư viện giao diện PyQt6:
+### GUI Version (Graphical User Interface)
+The GUI version requires the `PyQt6` UI library:
 ```bash
 pip install -r requirements.txt
 python3 3ds_toolbox.py
 ```
 
-> **Lưu ý**: Khuyến cáo dùng thẻ nhớ dưới 64GB format FAT32 (hoặc cao hơn nhưng Format cluster 32kb bằng GUIFormat) để trải nghiệm đạt đỉnh điểm nhất! Chúc bạn hồi sinh 3DS thành công! 🌟
+> **Note**: For the best experience, it is highly recommended to use an SD card under 64GB formatted to FAT32. For 64GB+ cards, please use tools like GUIFormat to enforce a 32KB cluster size. Enjoy reviving your 3DS! 🌟
